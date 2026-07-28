@@ -1,0 +1,44 @@
+[
+  {
+    "id": "A1001",
+    "name": "Dr. Ramesh Kumar",
+    "nameTa": "முனைவர் ரமேஷ் குமார்",
+    "category": "Office",
+    "language": "en"
+  },
+  {
+    "id": "A1002",
+    "name": "R. Suresh Family",
+    "nameTa": "R. சுரேஷ் குடும்பத்தார்",
+    "category": "Family",
+    "language": "ta"
+  },
+  {
+    "id": "A1003",
+    "name": "Prof. Mohan Raj",
+    "nameTa": "பேராசிரியர் மோகன் ராஜ்",
+    "category": "Professor",
+    "language": "en"
+  },
+  {
+    "id": "A1004",
+    "name": "Arun",
+    "nameTa": "அருண்",
+    "category": "Friend",
+    "language": "en"
+  },
+  {
+    "id": "A1005",
+    "name": "Lakshmi Athai & Family",
+    "nameTa": "லக்ஷ்மி அத்தை மற்றும் குடும்பத்தார்",
+    "category": "Relative",
+    "language": "ta"
+  },
+  {
+    "id": "A1006",
+    "name": "Priya",
+    "nameTa": "பிரியா",
+    "category": "Student",
+    "language": "en"
+  }
+]

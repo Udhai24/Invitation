@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Vignesh Kumar and Yuvasri wedding invitation">
+  <defs>
+    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D8BE83" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#FBF7F0" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#FBF7F0"/>
+  <rect width="1200" height="380" fill="url(#glow)"/>
+  <rect x="30" y="30" width="1140" height="570" fill="none" stroke="#B08838" stroke-opacity=".4"/>
+  <rect x="40" y="40" width="1120" height="550" fill="none" stroke="#B08838" stroke-opacity=".2"/>
+
+  <!-- kolam corner motifs -->
+  <g fill="none" stroke="#B08838" stroke-opacity=".55" stroke-width="1.6">
+    <path d="M70 70h60M70 70v60M70 130c33 0 60-27 60-60"/>
+    <path d="M1130 70h-60M1130 70v60M1130 130c-33 0-60-27-60-60"/>
+    <path d="M70 560h60M70 560v-60M70 500c33 0 60 27 60 60"/>
+    <path d="M1130 560h-60M1130 560v-60M1130 500c-33 0-60 27-60 60"/>
+  </g>
+
+  <text x="600" y="150" text-anchor="middle" fill="#B08838"
+        font-family="Georgia, serif" font-size="24" letter-spacing="6">ஸ்ரீ முருகன் துணை</text>
+
+  <text x="600" y="270" text-anchor="middle" fill="#7A1F2B"
+        font-family="Georgia, 'Times New Roman', serif" font-size="86">Yuvasri</text>
+  <text x="600" y="330" text-anchor="middle" fill="#B08838"
+        font-family="Georgia, serif" font-style="italic" font-size="44">&amp;</text>
+  <text x="600" y="415" text-anchor="middle" fill="#7A1F2B"
+        font-family="Georgia, 'Times New Roman', serif" font-size="86">Vignesh Kumar</text>
+
+  <g stroke="#B08838" stroke-width="1.4" fill="none">
+    <path d="M420 460h120M660 460h120"/>
+    <path d="M600 448c11 6 11 18 0 24-11-6-11-18 0-24z" fill="#B08838" stroke="none"/>
+  </g>
+
+  <text x="600" y="520" text-anchor="middle" fill="#2A2118"
+        font-family="Georgia, serif" font-size="30" letter-spacing="4">Sunday, 13 September 2026</text>
+  <text x="600" y="558" text-anchor="middle" fill="#5C5145"
+        font-family="Georgia, serif" font-size="21" letter-spacing="2">Muhurtham 6:00 – 7:30 AM · S.S.P Bhavana Hall, Kanchipuram</text>
+</svg>

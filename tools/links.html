@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Guest Link &amp; QR Generator — internal tool</title>
+<style>
+  :root{ --paper:#FBF7F0; --ink:#2A2118; --soft:#5C5145; --maroon:#7A1F2B; --gold:#B08838; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; padding:2rem 1.25rem 4rem; background:var(--paper); color:var(--ink);
+        font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+  .wrap{ max-width:1000px; margin-inline:auto; }
+  h1{ font-size:1.5rem; margin:0 0 .25rem; color:var(--maroon); }
+  p.sub{ margin:0 0 1.75rem; color:var(--soft); }
+  fieldset{ border:1px solid rgba(176,136,56,.35); border-radius:4px; padding:1rem 1.15rem 1.25rem; margin:0 0 1.5rem; }
+  legend{ font-size:.72rem; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); padding-inline:.4rem; }
+  label{ display:block; font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; color:var(--soft); margin-bottom:.25rem; }
+  input,select,textarea{ width:100%; font:inherit; padding:.6rem .7rem; border:1px solid rgba(42,33,24,.22);
+                         border-radius:3px; background:#fff; color:inherit; }
+  .row{ display:grid; gap:1rem; grid-template-columns:1fr; }
+  @media (min-width:700px){ .row--2{ grid-template-columns:1fr 1fr; } .row--3{ grid-template-columns:2fr 1fr 1fr; } }
+  button{ font:inherit; cursor:pointer; padding:.6rem 1.1rem; border-radius:3px;
+          border:1px solid var(--maroon); background:var(--maroon); color:#fff; }
+  button.ghost{ background:transparent; color:var(--maroon); border-color:var(--gold); }
+  .bar{ display:flex; flex-wrap:wrap; gap:.6rem; margin:1rem 0 2rem; }
+  table{ width:100%; border-collapse:collapse; font-size:.92rem; background:#fff; }
+  th,td{ text-align:left; padding:.65rem .7rem; border-bottom:1px solid rgba(42,33,24,.1); vertical-align:middle; }
+  th{ font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); }
+  td.link{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.78rem; word-break:break-all; }
+  .qr{ width:96px; height:96px; }
+  .qr canvas,.qr img{ display:block; width:96px !important; height:96px !important; }
+  .acts{ display:flex; flex-direction:column; gap:.35rem; }
+  .acts button{ padding:.3rem .6rem; font-size:.78rem; }
+  .note{ background:rgba(176,136,56,.1); border-left:3px solid var(--gold); padding:.8rem 1rem; font-size:.9rem; color:var(--soft); }
+  code{ background:rgba(42,33,24,.07); padding:.1rem .3rem; border-radius:2px; font-size:.85em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Guest link &amp; QR generator</h1>
+  <p class="sub">Internal tool — not linked from the invitation. Generates one personal link, WhatsApp message and QR code per guest from <code>assets/data/guests.json</code>.</p>
+
+  <fieldset>
+    <legend>Settings</legend>
+    <div class="row row--2">
+      <div>
+        <label for="base">Site base URL</label>
+        <input id="base" type="url" placeholder="https://username.github.io/invitation/">
+      </div>
+      <div>
+        <label for="langMode">Language in link</label>
+        <select id="langMode">
+          <option value="guest">Use each guest's preferred language</option>
+          <option value="none">Don't set — let the site decide</option>
+          <option value="en">Force English</option>
+          <option value="ta">Force Tamil</option>
+        </select>
+      </div>
+    </div>
+    <div class="bar">
+      <button id="load">Load guests.json</button>
+      <button class="ghost" id="pick">Or choose a JSON file…</button>
+      <input id="file" type="file" accept=".json" hidden>
+      <button class="ghost" id="csv">Download CSV</button>
+      <button class="ghost" id="copyAll">Copy all links</button>
+    </div>
+    <p class="note">Add guests by editing <code>assets/data/guests.json</code> — each entry needs <code>id</code>, <code>name</code>, optional <code>nameTa</code>, <code>category</code> (Family / Relative / Friend / Office / Professor / Student) and <code>language</code> (<code>en</code> or <code>ta</code>). Commit, push, done.</p>
+  </fieldset>
+
+  <div id="out"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<script>
+const $ = s => document.querySelector(s);
+let rows = [];
+
+// Sensible default base URL: parent of /tools/
+$('#base').value = new URL('../', location.href).href;
+
+function linkFor(g){
+  const u = new URL($('#base').value || new URL('../', location.href).href);
+  u.searchParams.set('id', g.id);
+  const mode = $('#langMode').value;
+  const lang = mode === 'guest' ? (g.language || '') : (mode === 'none' ? '' : mode);
+  if (lang) u.searchParams.set('lang', lang);
+  return u.toString();
+}
+
+function waFor(g){
+  const ta = (g.language || '') === 'ta';
+  const name = ta ? (g.nameTa || g.name) : g.name;
+  const body = ta
+    ? `${name},\n\nஎங்கள் வீட்டு திருமண நிகழ்வுக்கு தங்களை அன்புடன் அழைக்கின்றோம். உங்களுக்கான தனிப்பட்ட அழைப்பிதழ்:\n${linkFor(g)}\n\n13.09.2026 ஞாயிற்றுக்கிழமை · காலை 6.00 – 7.30 · S.S.P பாவனா ஹால், காஞ்சிபுரம்`
+    : `Dear ${name},\n\nWe warmly invite you to our wedding. Here is your personal invitation:\n${linkFor(g)}\n\nSunday, 13 September 2026 · 6:00–7:30 AM · S.S.P Bhavana Hall, Kanchipuram`;
+  return 'https://wa.me/?text=' + encodeURIComponent(body);
+}
+
+function render(){
+  if (!rows.length){ $('#out').innerHTML = '<p class="sub">No guests loaded yet.</p>'; return; }
+  $('#out').innerHTML = `
+    <table>
+      <thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Lang</th><th>Personal link</th><th>QR</th><th></th></tr></thead>
+      <tbody>${rows.map((g,i)=>`
+        <tr>
+          <td>${g.id}</td>
+          <td>${g.name || ''}${g.nameTa ? `<br><span style="color:#5C5145">${g.nameTa}</span>` : ''}</td>
+          <td>${g.category || '—'}</td>
+          <td>${g.language || '—'}</td>
+          <td class="link">${linkFor(g)}</td>
+          <td><div class="qr" id="qr${i}"></div></td>
+          <td class="acts">
+            <button class="ghost" data-copy="${i}">Copy link</button>
+            <a href="${waFor(g)}" target="_blank" rel="noopener"><button class="ghost">WhatsApp</button></a>
+            <button class="ghost" data-png="${i}">Save QR</button>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  rows.forEach((g,i)=>{
+    const box = document.getElementById('qr'+i);
+    if (window.QRCode) new QRCode(box, { text: linkFor(g), width:96, height:96,
+      colorDark:'#2A2118', colorLight:'#FFFFFF', correctLevel: QRCode.CorrectLevel.M });
+    else box.textContent = 'QR library offline';
+  });
+
+  $('#out').onclick = e => {
+    const c = e.target.dataset.copy, p = e.target.dataset.png;
+    if (c !== undefined){ navigator.clipboard.writeText(linkFor(rows[c])); e.target.textContent='Copied'; setTimeout(()=>e.target.textContent='Copy link',1500); }
+    if (p !== undefined){
+      const el = document.querySelector('#qr'+p+' canvas') || document.querySelector('#qr'+p+' img');
+      if (!el) return;
+      const url = el.tagName === 'CANVAS' ? el.toDataURL('image/png') : el.src;
+      const a = document.createElement('a'); a.href = url; a.download = `qr-${rows[p].id}.png`; a.click();
+    }
+  };
+}
+
+async function load(){
+  try{
+    const res = await fetch('../assets/data/guests.json', { cache:'no-cache' });
+    rows = await res.json(); render();
+  }catch(err){
+    $('#out').innerHTML = `<p class="note">Couldn't fetch guests.json (${err.message}). If you opened this file directly from disk, use the “choose a JSON file” button, or run a local server: <code>python3 -m http.server</code></p>`;
+  }
+}
+
+$('#load').onclick = load;
+$('#pick').onclick = () => $('#file').click();
+$('#file').onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => { try{ rows = JSON.parse(r.result); render(); }catch(err){ alert('Invalid JSON: '+err.message); } };
+  r.readAsText(f);
+};
+$('#langMode').onchange = render;
+$('#base').oninput = render;
+$('#csv').onclick = () => {
+  if(!rows.length) return;
+  const esc = s => `"${String(s ?? '').replace(/"/g,'""')}"`;
+  const csv = ['id,name,nameTa,category,language,link']
+    .concat(rows.map(g => [g.id,g.name,g.nameTa,g.category,g.language,linkFor(g)].map(esc).join(',')))
+    .join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = 'guest-links.csv'; a.click();
+};
+$('#copyAll').onclick = () => {
+  navigator.clipboard.writeText(rows.map(g => `${g.name}\t${linkFor(g)}`).join('\n'));
+  $('#copyAll').textContent = 'Copied'; setTimeout(()=>$('#copyAll').textContent='Copy all links',1500);
+};
+
+addEventListener('load', load);
+</script>
+</body>
+</html>
