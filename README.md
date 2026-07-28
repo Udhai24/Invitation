@@ -37,12 +37,15 @@ Try these URLs:
 
 ## 2. Deploying to GitHub Pages
 
-1. Create a repo and push these files to the default branch.
-2. **Settings → Pages → Source:** *Deploy from a branch* → `main` / `(root)`.
-3. Wait ~1 minute, then note your URL, e.g. `https://yourname.github.io/invitation/`.
-4. Open `assets/js/config.js` and set `siteUrl` to that URL. Commit. **This is the only path you need to change** — everything else uses relative paths, so the site works at any base path.
+See **[DEPLOY.md](DEPLOY.md)** for step-by-step instructions. Short version:
 
-`.nojekyll` is already included so GitHub doesn't try to process the folder as a Jekyll site.
+1. Create an empty repo on GitHub named `invitation` (no README, no .gitignore).
+2. From this folder: `git remote add origin <url>` then `git push -u origin main`.
+3. **Settings → Pages → Source:** *Deploy from a branch* → `main` / `(root)` → Save.
+
+There is **nothing to configure afterwards.** All paths are relative and the share/QR base URL is read from the address bar, so the site works identically on `localhost:8080`, at `username.github.io/invitation/`, or on a custom domain.
+
+`.nojekyll` is already included so GitHub doesn't process the folder as a Jekyll site.
 
 ---
 
