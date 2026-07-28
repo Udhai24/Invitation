@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ta" data-lang="ta">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#FBF7F0">
+<title>அழைப்பிதழ் உருவாக்கு · Create an invitation link</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Serif+Tamil:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --paper:#FBF7F0; --paper-2:#F4EDE1; --white:#FFFDF9;
+    --ink:#2A2118; --soft:#5C5145;
+    --maroon:#7A1F2B; --maroon-dk:#571119;
+    --gold:#B08838; --gold-lt:#D8BE83; --gold-fade:rgba(176,136,56,.3);
+    --serif:'Cormorant Garamond',Georgia,serif;
+    --tamil:'Noto Serif Tamil',serif;
+    --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0; padding:0 0 4rem; background:var(--paper); color:var(--ink);
+    font-family:var(--ui); font-size:17px; line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  html[data-lang="ta"] body{ font-family:var(--tamil); line-height:1.9; }
+  :focus-visible{ outline:2.5px solid var(--maroon); outline-offset:3px; }
+
+  .bar{
+    display:flex; align-items:center; gap:1rem;
+    padding:.7rem 1.15rem; background:var(--white);
+    border-bottom:1px solid var(--gold-fade);
+    position:sticky; top:0; z-index:5;
+  }
+  .bar__t{ font-family:var(--serif); font-size:1.05rem; letter-spacing:.1em; color:var(--maroon); }
+  html[data-lang="ta"] .bar__t{ font-family:var(--tamil); letter-spacing:0; }
+  .langbtn{
+    margin-left:auto; min-height:40px; padding:.35rem .9rem; cursor:pointer;
+    font:inherit; font-size:.9rem; color:var(--maroon); background:transparent;
+    border:1px solid var(--gold-fade); border-radius:99px;
+  }
+  .langbtn:hover{ background:var(--paper-2); }
+
+  .wrap{ max-width:620px; margin-inline:auto; padding:1.6rem 1.15rem 0; }
+
+  h1{
+    margin:0 0 .3rem; font-family:var(--serif); font-weight:500;
+    font-size:clamp(1.6rem,6vw,2.2rem); line-height:1.25; color:var(--maroon);
+  }
+  html[data-lang="ta"] h1{ font-family:var(--tamil); }
+  .sub{ margin:0 0 2rem; color:var(--soft); font-size:.98rem; }
+
+  .field{ margin-bottom:1.4rem; }
+  label{
+    display:block; margin-bottom:.35rem; font-family:var(--ui);
+    font-size:.76rem; font-weight:600; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--gold);
+  }
+  html[data-lang="ta"] label{ font-family:var(--tamil); text-transform:none; letter-spacing:.04em; font-size:.88rem; }
+  .hint{ margin:.3rem 0 0; font-size:.85rem; color:var(--soft); }
+
+  input[type=text], select{
+    width:100%; min-height:52px; padding:.7rem .85rem;
+    font:inherit; color:var(--ink); background:var(--white);
+    border:1px solid rgba(42,33,24,.22); border-radius:3px;
+  }
+  input[type=text]:focus, select:focus{ border-color:var(--gold); }
+
+  .chips{ display:flex; flex-wrap:wrap; gap:.5rem; }
+  .chip{
+    padding:.55rem 1rem; min-height:44px; cursor:pointer;
+    font:inherit; font-size:.95rem; color:var(--maroon);
+    background:var(--white); border:1px solid var(--gold-fade); border-radius:99px;
+  }
+  .chip[aria-pressed="true"]{ background:var(--maroon); color:var(--white); border-color:var(--maroon); }
+
+  /* live preview */
+  .preview{
+    margin:2rem 0; padding:1.5rem 1.25rem; text-align:center;
+    background:var(--white); border:1px solid var(--gold-fade);
+    box-shadow:inset 0 0 0 4px var(--white), inset 0 0 0 5px rgba(176,136,56,.14);
+  }
+  .preview__tag{
+    display:inline-block; margin-bottom:.6rem; padding:.25rem .75rem;
+    font-family:var(--ui); font-size:.66rem; font-weight:600;
+    letter-spacing:.2em; text-transform:uppercase;
+    color:var(--maroon); background:rgba(176,136,56,.13); border-radius:99px;
+  }
+  html[data-lang="ta"] .preview__tag{ font-family:var(--tamil); text-transform:none; letter-spacing:.05em; font-size:.8rem; }
+  .preview__tag[hidden]{ display:none; }
+  .preview__line{
+    margin:0; font-family:var(--serif); font-style:italic;
+    font-size:clamp(1.15rem,4.6vw,1.5rem); line-height:1.35; color:var(--ink);
+    min-height:1.4em; word-break:break-word;
+  }
+  html[data-lang="ta"] .preview__line{ font-family:var(--tamil); font-style:normal; }
+  .preview__names{ margin:.9rem 0 0; font-family:var(--serif); font-size:1.15rem; color:var(--maroon); letter-spacing:.06em; }
+  html[data-lang="ta"] .preview__names{ font-family:var(--tamil); letter-spacing:0; }
+
+  .linkbox{
+    margin:0 0 1rem; padding:.8rem .9rem;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.8rem;
+    line-height:1.55; word-break:break-all; color:var(--soft);
+    background:var(--paper-2); border:1px solid var(--gold-fade); border-radius:3px;
+  }
+
+  .btns{ display:grid; gap:.7rem; }
+  @media (min-width:520px){ .btns{ grid-template-columns:1fr 1fr; } }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+    min-height:54px; padding:.8rem 1.2rem; width:100%;
+    font:inherit; font-size:1rem; cursor:pointer; text-decoration:none;
+    border-radius:3px; border:1px solid var(--maroon);
+    background:var(--maroon); color:var(--white);
+  }
+  .btn--ghost{ background:transparent; color:var(--maroon); border-color:var(--gold); }
+  .btn--ghost:hover{ background:rgba(176,136,56,.1); }
+  .btn--wide{ grid-column:1/-1; }
+  .btn[aria-disabled="true"]{ opacity:.45; pointer-events:none; }
+
+  .qrwrap{ margin:1.6rem 0 0; text-align:center; }
+  .qrwrap canvas, .qrwrap img{ display:block; margin:0 auto; border:8px solid #fff; }
+  .qrwrap p{ margin:.6rem 0 0; font-size:.85rem; color:var(--soft); }
+
+  details{ margin:2.4rem 0 0; border-top:1px solid var(--gold-fade); padding-top:1.2rem; }
+  summary{ cursor:pointer; color:var(--maroon); font-size:.95rem; }
+  details p, details li{ color:var(--soft); font-size:.92rem; }
+
+  .status{ min-height:1.5em; margin:.8rem 0 0; text-align:center; color:var(--gold); font-size:.92rem; }
+  .warn{
+    margin:1.5rem 1.15rem; padding:1rem 1.15rem; border-radius:3px;
+    background:var(--maroon); color:var(--paper); font-size:.95rem;
+  }
+  .warn code{ background:rgba(251,247,240,.18); padding:.1rem .35rem; border-radius:2px; }
+  .warn a{ color:var(--gold-lt); }
+</style>
+</head>
+
+<body>
+
+<div class="bar">
+  <span class="bar__t" id="barTitle">அழைப்பிதழ் உருவாக்கு</span>
+  <button class="langbtn" id="langBtn" type="button">English</button>
+</div>
+
+<div class="warn" id="fileWarn" hidden></div>
+
+<div class="wrap">
+
+  <h1 id="h1">ஒவ்வொருவருக்கும் தனிப்பட்ட அழைப்பிதழ்</h1>
+  <p class="sub" id="sub">பெயரை மட்டும் எழுதுங்கள். WhatsApp-ல் அனுப்பத் தயாரான இணைப்பு உடனே கிடைக்கும்.</p>
+
+  <div class="field">
+    <label for="nm" id="lblName">விருந்தினர் பெயர்</label>
+    <input type="text" id="nm" autocomplete="off" enterkeyhint="done" maxlength="70">
+    <p class="hint" id="hintName">எ.கா. ரமேஷ் மாமா, சுரேஷ் குடும்பத்தார்</p>
+  </div>
+
+  <div class="field">
+    <label for="nm2" id="lblName2">ஆங்கிலப் பெயர் (விரும்பினால்)</label>
+    <input type="text" id="nm2" autocomplete="off" maxlength="70">
+    <p class="hint" id="hintName2">இரண்டு மொழியிலும் சரியாகத் தெரிய வேண்டுமெனில் மட்டும்.</p>
+  </div>
+
+  <div class="field">
+    <label id="lblCat">யார் இவர்?</label>
+    <div class="chips" id="chips"></div>
+    <p class="hint" id="hintCat">வாழ்த்து வாக்கியம் இதற்கேற்ப மாறும்.</p>
+  </div>
+
+  <div class="field">
+    <label for="lg" id="lblLang">அழைப்பிதழ் மொழி</label>
+    <select id="lg">
+      <option value="ta">தமிழ் · Tamil</option>
+      <option value="en">English</option>
+      <option value="">விருந்தினர் தேர்வு · Let them choose</option>
+    </select>
+  </div>
+
+  <!-- Live preview of the greeting they'll see -->
+  <div class="preview">
+    <span class="preview__tag" id="pvTag" hidden></span>
+    <p class="preview__line" id="pvLine"></p>
+    <p class="preview__names" id="pvNames">யுவஸ்ரீ — விக்னேஷ் குமார்</p>
+  </div>
+
+  <p class="linkbox" id="linkBox"></p>
+
+  <div class="btns">
+    <a class="btn btn--wide" id="waBtn" target="_blank" rel="noopener">WhatsApp</a>
+    <button class="btn btn--ghost" id="copyBtn" type="button">இணைப்பை நகலெடு</button>
+    <a class="btn btn--ghost" id="openBtn" target="_blank" rel="noopener">திறந்து பார்</a>
+  </div>
+
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+
+  <div class="qrwrap">
+    <div id="qr"></div>
+    <p><button class="btn btn--ghost" id="qrBtn" type="button" style="max-width:260px;margin:.8rem auto 0">QR பதிவிறக்கு</button></p>
+  </div>
+
+  <details>
+    <summary id="sumTitle">இது எப்படி வேலை செய்கிறது?</summary>
+    <div id="sumBody"></div>
+  </details>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (s) { return document.querySelector(s); };
+
+  /* ── Wording, both languages ─────────────────────────────────────────── */
+  var S = {
+    ta: {
+      barTitle: 'அழைப்பிதழ் உருவாக்கு',
+      langBtn: 'English',
+      h1: 'ஒவ்வொருவருக்கும் தனிப்பட்ட அழைப்பிதழ்',
+      sub: 'பெயரை மட்டும் எழுதுங்கள். WhatsApp-ல் அனுப்பத் தயாரான இணைப்பு உடனே கிடைக்கும்.',
+      lblName: 'விருந்தினர் பெயர்',
+      hintName: 'எ.கா. ரமேஷ் மாமா, சுரேஷ் குடும்பத்தார்',
+      lblName2: 'ஆங்கிலப் பெயர் (விரும்பினால்)',
+      hintName2: 'இரண்டு மொழியிலும் சரியாகத் தெரிய வேண்டுமெனில் மட்டும்.',
+      lblCat: 'யார் இவர்?',
+      hintCat: 'வாழ்த்து வாக்கியம் இதற்கேற்ப மாறும்.',
+      lblLang: 'அழைப்பிதழ் மொழி',
+      cats: { '': 'குறிப்பிடவில்லை', Family: 'சொந்தம்', Relative: 'உறவினர்', Friend: 'நண்பர்',
+              Office: 'அலுவலகம்', Professor: 'ஆசிரியர்', Student: 'மாணவர்' },
+      copy: 'இணைப்பை நகலெடு',
+      copied: 'நகலெடுக்கப்பட்டது ✓',
+      open: 'திறந்து பார்',
+      qr: 'QR பதிவிறக்கு',
+      needName: 'மேலே பெயரை எழுதுங்கள்.',
+      sumTitle: 'இது எப்படி வேலை செய்கிறது?',
+      sumBody: '<p>பெயர் இணைப்புக்குள்ளேயே இருக்கிறது. அதனால் யாரும், எப்போதும், எந்த மாற்றமும் செய்யாமல் இணைப்பை உருவாக்கலாம்.</p>'
+             + '<p>ஒவ்வொருவருக்கும் தனித்தனி இணைப்பை உருவாக்கி WhatsApp-ல் அனுப்புங்கள். அவர் திறக்கும்போது அவரது பெயரோடு வரவேற்கும்.</p>'
+             + '<p>இணைப்பில் பெயர் தெரியும் — அது இயல்பானது. ரகசியத் தகவல் எதையும் சேர்க்க வேண்டாம்.</p>',
+      waMsg: function (name, link) {
+        return name + ',\n\nஎங்கள் வீட்டு திருமண நிகழ்வுக்கு தங்களை அன்புடன் அழைக்கின்றோம். '
+             + 'உங்களுக்கான தனிப்பட்ட அழைப்பிதழ்:\n' + link
+             + '\n\n12.09.2026 சனிக்கிழமை மாலை 6.00 — வரவேற்பு'
+             + '\n13.09.2026 ஞாயிற்றுக்கிழமை காலை 6.00 – 7.30 — சுபமுகூர்த்தம்'
+             + '\nS.S.P பாவனா ஹால், சின்ன காஞ்சிபுரம்';
+      },
+      greet: { Family: 'இல்லம் வருக, {n}', Relative: 'வணக்கம், {n}',
+               Friend: '{n}, உங்களை எதிர்நோக்கியிருக்கிறோம்', Office: 'வணக்கம், {n}',
+               Professor: 'மதிப்பிற்குரிய {n}', Student: 'வணக்கம், {n}', '': 'வணக்கம், {n}' },
+      names: 'யுவஸ்ரீ — விக்னேஷ் குமார்',
+      fallback: 'அன்புடையீர் வணக்கம்',
+      warn: '<strong>இந்தப் பக்கம் இணையதளத்தில் இருந்து திறக்க வேண்டும்.</strong> '
+          + 'கோப்பாக நேரடியாகத் திறந்தால் வேலை செய்யாது. '
+          + '<code>python -m http.server 8080</code> ஓட்டி <a href="http://localhost:8080/tools/create.html">localhost</a>-ல் திறங்கள்.'
+    },
+    en: {
+      barTitle: 'Create a link',
+      langBtn: 'தமிழ்',
+      h1: 'A personal invitation for each guest',
+      sub: 'Type a name. You get a link that is ready to send on WhatsApp.',
+      lblName: 'Guest name',
+      hintName: 'e.g. Ramesh Mama, Suresh Family',
+      lblName2: 'Tamil name (optional)',
+      hintName2: 'Only if you want it to read correctly in both languages.',
+      lblCat: 'Who is this?',
+      hintCat: 'The greeting wording changes to suit.',
+      lblLang: 'Invitation language',
+      cats: { '': 'Not specified', Family: 'Family', Relative: 'Relative', Friend: 'Friend',
+              Office: 'Office', Professor: 'Professor', Student: 'Student' },
+      copy: 'Copy link',
+      copied: 'Copied ✓',
+      open: 'Preview it',
+      qr: 'Download QR',
+      needName: 'Type a name above to get started.',
+      sumTitle: 'How does this work?',
+      sumBody: '<p>The name travels inside the link itself, so anyone can make a working link at any time — nothing needs to be edited or re-published.</p>'
+             + '<p>Make one link per guest and send it on WhatsApp. When they open it, the invitation greets them by name.</p>'
+             + '<p>The name is visible in the link, which is normal. Don\'t put anything private in it.</p>',
+      waMsg: function (name, link) {
+        return 'Dear ' + name + ',\n\nWe warmly invite you to our wedding. '
+             + 'Here is your personal invitation:\n' + link
+             + '\n\nSaturday 12 Sep 2026, 6:00 PM — Reception'
+             + '\nSunday 13 Sep 2026, 6:00–7:30 AM — Muhurtham'
+             + '\nS.S.P Bhavana Hall, Chinna Kanchipuram';
+      },
+      greet: { Family: 'Welcome home, {n}', Relative: 'Welcome, {n}',
+               Friend: 'Hey {n}, we’ve been waiting for you', Office: 'Welcome, {n}',
+               Professor: 'Respected {n}', Student: 'Welcome, {n}', '': 'Welcome, {n}' },
+      names: 'Yuvasri — Vignesh Kumar',
+      fallback: 'Dear Guest, welcome',
+      warn: '<strong>This page needs a web server.</strong> '
+          + 'Opening it straight from a folder will not work. Run '
+          + '<code>python -m http.server 8080</code> then open '
+          + '<a href="http://localhost:8080/tools/create.html">localhost</a>.'
+    }
+  };
+
+  var CATS = ['', 'Family', 'Relative', 'Friend', 'Office', 'Professor', 'Student'];
+
+  var ui = 'ta';       // language of THIS page
+  var cat = '';        // chosen category
+
+  /* Mirrors cleanParam() in assets/js/app.js */
+  function clean(v, max) {
+    return (v || '')
+      .replace(/[<>]/g, '')
+      .replace(/[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u2028\u2029]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, max || 70);
+  }
+
+  /* The invitation lives one level up from /tools/ */
+  function invitationUrl() {
+    return new URL('../', location.href).href;
+  }
+
+  function currentLink() {
+    var primary = clean($('#nm').value);
+    var secondary = clean($('#nm2').value);
+    if (!primary) return '';
+
+    var lang = $('#lg').value;
+    var u = new URL(invitationUrl());
+
+    // Field 1 holds the name in whichever language this page is set to.
+    // ?n = the Latin/default name, ?nt = the Tamil name.
+    if (ui === 'ta') {
+      u.searchParams.set('n', secondary || primary);
+      u.searchParams.set('nt', primary);
+    } else {
+      u.searchParams.set('n', primary);
+      if (secondary) u.searchParams.set('nt', secondary);
+    }
+    if (cat) u.searchParams.set('c', cat);
+    if (lang) u.searchParams.set('lang', lang);
+    return u.toString();
+  }
+
+  /* What the guest will actually see, in the invitation's language */
+  function previewGreeting() {
+    var t = S[ui];
+    var invLang = $('#lg').value || 'ta';
+    var g = S[invLang] || S.ta;
+
+    var primary = clean($('#nm').value);
+    var secondary = clean($('#nm2').value);
+    var shown = invLang === 'ta'
+      ? (ui === 'ta' ? primary : (secondary || primary))
+      : (ui === 'ta' ? (secondary || primary) : primary);
+
+    $('#pvNames').textContent = g.names;
+    if (!shown) { $('#pvLine').textContent = g.fallback; $('#pvTag').hidden = true; return; }
+
+    $('#pvLine').textContent = (g.greet[cat] || g.greet['']).replace('{n}', shown);
+    if (cat) { $('#pvTag').textContent = g.cats[cat]; $('#pvTag').hidden = false; }
+    else { $('#pvTag').hidden = true; }
+  }
+
+  var qrObj = null;
+  function refresh() {
+    var t = S[ui];
+    var link = currentLink();
+
+    previewGreeting();
+
+    var wa = $('#waBtn'), copy = $('#copyBtn'), open = $('#openBtn'), qrBtn = $('#qrBtn');
+
+    if (!link) {
+      $('#linkBox').textContent = t.needName;
+      [wa, copy, open, qrBtn].forEach(function (b) { b.setAttribute('aria-disabled', 'true'); });
+      $('#qr').innerHTML = '';
+      qrObj = null;
+      return;
+    }
+
+    [wa, copy, open, qrBtn].forEach(function (b) { b.removeAttribute('aria-disabled'); });
+    $('#linkBox').textContent = link;
+    open.href = link;
+
+    var nameForMsg = ui === 'ta' ? clean($('#nm').value) : clean($('#nm').value);
+    wa.href = 'https://wa.me/?text=' + encodeURIComponent(t.waMsg(nameForMsg, link));
+
+    $('#qr').innerHTML = '';
+    if (window.QRCode) {
+      qrObj = new QRCode($('#qr'), {
+        text: link, width: 220, height: 220,
+        colorDark: '#2A2118', colorLight: '#FFFFFF',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+  }
+
+  function applyUi() {
+    var t = S[ui];
+    document.documentElement.lang = ui;
+    document.documentElement.dataset.lang = ui;
+    document.title = ui === 'ta' ? 'அழைப்பிதழ் உருவாக்கு' : 'Create an invitation link';
+
+    $('#barTitle').textContent = t.barTitle;
+    $('#langBtn').textContent = t.langBtn;
+    $('#h1').textContent = t.h1;
+    $('#sub').textContent = t.sub;
+    $('#lblName').textContent = t.lblName;
+    $('#hintName').textContent = t.hintName;
+    $('#lblName2').textContent = t.lblName2;
+    $('#hintName2').textContent = t.hintName2;
+    $('#lblCat').textContent = t.lblCat;
+    $('#hintCat').textContent = t.hintCat;
+    $('#lblLang').textContent = t.lblLang;
+    $('#copyBtn').textContent = t.copy;
+    $('#openBtn').textContent = t.open;
+    $('#qrBtn').textContent = t.qr;
+    $('#sumTitle').textContent = t.sumTitle;
+    $('#sumBody').innerHTML = t.sumBody;
+
+    // Field 1 is always "the language of this page"; field 2 is the other one
+    $('#lblName').textContent = ui === 'ta' ? 'விருந்தினர் பெயர் (தமிழில்)' : 'Guest name (in English)';
+    $('#lblName2').textContent = ui === 'ta' ? 'ஆங்கிலப் பெயர் (விரும்பினால்)' : 'Tamil name (optional)';
+
+    $('#chips').innerHTML = '';
+    CATS.forEach(function (c) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.textContent = t.cats[c];
+      b.setAttribute('aria-pressed', String(c === cat));
+      b.onclick = function () {
+        cat = c;
+        Array.prototype.forEach.call($('#chips').children, function (el) {
+          el.setAttribute('aria-pressed', 'false');
+        });
+        b.setAttribute('aria-pressed', 'true');
+        refresh();
+      };
+      $('#chips').appendChild(b);
+    });
+
+    refresh();
+  }
+
+  /* ── wire up ───────────────────────────────────────────────────────── */
+  $('#langBtn').onclick = function () {
+    // Field 1 always means "the language this page is in", so swap the two
+    // values as we flip — otherwise a Tamil name would sit under an
+    // "in English" label.
+    var a = $('#nm').value, b = $('#nm2').value;
+    $('#nm').value = b;
+    $('#nm2').value = a;
+    ui = ui === 'ta' ? 'en' : 'ta';
+    applyUi();
+  };
+  $('#nm').oninput = refresh;
+  $('#nm2').oninput = refresh;
+  $('#lg').onchange = refresh;
+
+  $('#copyBtn').onclick = function () {
+    var link = currentLink();
+    if (!link) return;
+    var done = function () {
+      $('#status').textContent = S[ui].copied;
+      setTimeout(function () { $('#status').textContent = ''; }, 2000);
+    };
+    if (navigator.clipboard) navigator.clipboard.writeText(link).then(done, done);
+    else {
+      var ta = document.createElement('textarea');
+      ta.value = link; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      ta.remove(); done();
+    }
+  };
+
+  $('#qrBtn').onclick = function () {
+    var el = $('#qr').querySelector('canvas') || $('#qr').querySelector('img');
+    if (!el) return;
+    var url = el.tagName === 'CANVAS' ? el.toDataURL('image/png') : el.src;
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'invitation-' + (clean($('#nm').value).replace(/\s+/g, '-').toLowerCase() || 'qr') + '.png';
+    a.click();
+  };
+
+  if (location.protocol === 'file:') {
+    $('#fileWarn').innerHTML = S.ta.warn;
+    $('#fileWarn').hidden = false;
+  }
+
+  applyUi();
+  window.addEventListener('load', refresh);   // re-draw QR once the library lands
+})();
+</script>
+</body>
+</html>

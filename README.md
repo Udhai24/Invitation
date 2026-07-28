@@ -49,7 +49,35 @@ There is **nothing to configure afterwards.** All paths are relative and the sha
 
 ---
 
-## 3. Adding guests
+## 3. Two ways to personalise a link
+
+| | **Anyone can use** | **Curated list** |
+|---|---|---|
+| Page | `tools/create.html` | `tools/links.html` |
+| Link looks like | `?n=Ramesh%20Mama&c=Relative` | `?id=A1001` |
+| Who it's for | Any family member, on their phone | Whoever maintains the repo |
+| Setup needed | **None** — the name travels inside the link | Guest must be added to `guests.json` and pushed |
+| Good for | Spreading the work across the family | A tidy master list, short links, a CSV of everyone |
+
+Both produce the same invitation experience. `?id=` wins if both are present; an unknown `?id=` quietly falls through to `?n=`, and if neither resolves the guest still sees a warm generic greeting.
+
+### For family members: `tools/create.html`
+
+Send them this one URL:
+
+```
+https://YOUR-USERNAME.github.io/invitation/tools/create.html
+```
+
+It's a phone-first page in Tamil and English. They type a name, tap who the person is (Family / Relative / Friend / Office / Professor / Student), see a live preview of the greeting that guest will get, then tap **WhatsApp** — the message is written for them, in the right language, with both event dates and the venue. There's also **Copy link**, **Preview it**, and a downloadable QR.
+
+Nothing is saved anywhere and nothing needs publishing, so several relatives can work through their own lists at the same time without stepping on each other.
+
+**The guest's name is visible in the link.** That's inherent to how it works — the name has to travel somewhere. It's the same information that's on the printed card, so it's fine; just don't type anything private into it.
+
+---
+
+## 4. Adding guests to the curated list
 
 Edit `assets/data/guests.json`:
 
@@ -86,7 +114,7 @@ This tool is intentionally not linked from the invitation and carries `noindex`.
 
 ---
 
-## 4. Editing the wedding details
+## 5. Editing the wedding details
 
 Everything lives in **`assets/js/config.js`** — one file, heavily commented.
 
@@ -128,7 +156,7 @@ Keep them under ~250 KB each (resize to 1200px on the long edge) — many guests
 
 ---
 
-## 5. How it's put together
+## 6. How it's put together
 
 ```
 index.html                  semantic skeleton, data-i18n hooks
@@ -140,8 +168,9 @@ assets/
   js/app.js                 guest lookup, language, render, interactions
   data/guests.json          guest list
   img/og.svg                link-preview image
-tools/links.html            internal link + QR + WhatsApp generator
-tools/test.mjs              140 automated checks (see below)
+tools/create.html           family-facing link creator (?n= links, no setup)
+tools/links.html            curated ?id= links + QR + CSV, from guests.json
+tools/test.mjs              231 automated checks (see below)
 docs/printed-card.jpg       the original printed card, for proofreading
 ```
 
@@ -176,11 +205,11 @@ npm install jsdom      # one-off
 node tools/test.mjs
 ```
 
-162 checks covering: personalised greetings per category and language, the `?lang=` / saved-choice / guest-record / browser-locale precedence chain, unknown guest ids and an unreachable `guests.json`, no unreplaced `{placeholders}` in either language, both event cards and their IST→UTC calendar conversions, countdown maths against `2026-09-13T06:00+05:30`, that RSVP is gone from markup/CSS/JS, that no grandparents or elders leak through, the loader failsafe including the `file://` path, share links preserving the guest id, translation parity between `en` and `ta`, GitHub Pages path assumptions, and accessibility markup. Run it after editing `config.js` or `i18n.js`.
+231 checks covering: personalised greetings per category and language, the `?lang=` / saved-choice / guest-record / browser-locale precedence chain, unknown guest ids and an unreachable `guests.json`, no unreplaced `{placeholders}` in either language, both event cards and their IST→UTC calendar conversions, countdown maths against `2026-09-13T06:00+05:30`, that RSVP is gone from markup/CSS/JS, that no grandparents or elders leak through, inline ?n= links including name sanitising and ?id= precedence, the creator page end to end, the loader failsafe including the `file://` path, share links preserving the guest id, translation parity between `en` and `ta`, GitHub Pages path assumptions, and accessibility markup. Run it after editing `config.js` or `i18n.js`.
 
 ---
 
-## 6. Growing this later
+## 7. Growing this later
 
 The seams are already there:
 
@@ -198,7 +227,7 @@ The seams are already there:
 
 ---
 
-## 7. Things to double-check before sending
+## 8. Things to double-check before sending
 
 - [ ] `siteUrl` in `config.js` matches the live GitHub Pages URL
 - [ ] The Google Maps pin resolves to the correct hall — search-by-name is used; paste an exact `maps.app.goo.gl` link into `venues.sspbhavana.mapUrl` if it doesn't

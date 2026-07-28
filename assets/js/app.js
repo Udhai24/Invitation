@@ -40,20 +40,64 @@ function saveLang(lang) {
   try { localStorage.setItem(LS_LANG, lang); } catch { /* ignore */ }
 }
 
-/* ─── 2. Guest lookup ─────────────────────────────────────────────────── */
+/* ─── 2. Guest lookup ───────────────────────────────────────────────────
+   Two ways to personalise, checked in this order:
+
+   a) ?id=A1001            — looked up in assets/data/guests.json.
+                             Curated, short, but the id must exist in the file.
+   b) ?n=Ramesh Kumar      — the name travels inside the link itself, so anyone
+      &nt=ரமேஷ் குமார்      in the family can make a working link with no edit
+      &c=Office             to the repo. See tools/create.html.
+------------------------------------------------------------------------- */
+
+const CATEGORIES = ['Family', 'Relative', 'Friend', 'Office', 'Professor', 'Student'];
+
+/** Anything arriving from the URL is untrusted. Keep it short and inert.
+ *  (It is only ever written with textContent, never innerHTML — this is
+ *  belt-and-braces so a stray name can't distort the layout either.) */
+function cleanParam(value, max = 70) {
+  return (value || '')
+    .replace(/[<>]/g, '')                                        // no tag-looking characters
+    .replace(/[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u2028\u2029]/g, '')   // control + invisible chars
+    .replace(/\s+/g, ' ')                                        // collapse whitespace
+    .trim()
+    .slice(0, max);
+}
+
+function inlineGuest() {
+  const p = new URLSearchParams(location.search);
+  const name = cleanParam(p.get('n'));
+  if (!name) return null;
+
+  const nameTa = cleanParam(p.get('nt'));
+  const cat = cleanParam(p.get('c'), 20);
+
+  return {
+    id: '',
+    name,
+    nameTa: nameTa || name,               // fall back to the Latin name
+    category: CATEGORIES.includes(cat) ? cat : 'default',
+    language: ''                          // ?lang= / saved choice decides
+  };
+}
+
 async function loadGuest() {
   const id = (new URLSearchParams(location.search).get('id') || '').trim();
-  if (!id) return null;
-  try {
-    const res = await fetch('assets/data/guests.json', { cache: 'no-cache' });
-    if (!res.ok) throw new Error(res.status);
-    const list = await res.json();
-    const hit = list.find(g => String(g.id).toLowerCase() === id.toLowerCase());
-    return hit || null;
-  } catch (err) {
-    console.warn('[invitation] guest list unavailable:', err.message);
-    return null;   // graceful: the invitation still renders for everyone
+
+  if (id) {
+    try {
+      const res = await fetch('assets/data/guests.json', { cache: 'no-cache' });
+      if (!res.ok) throw new Error(res.status);
+      const list = await res.json();
+      const hit = list.find(g => String(g.id).toLowerCase() === id.toLowerCase());
+      if (hit) return hit;
+    } catch (err) {
+      console.warn('[invitation] guest list unavailable:', err.message);
+      // fall through — an inline name or the generic greeting still works
+    }
   }
+
+  return inlineGuest();
 }
 
 function guestName(guest, lang) {
@@ -325,10 +369,13 @@ function baseUrl() {
 }
 
 function shareLink() {
-  // Preserve the guest id so a forwarded link still greets the same person
+  // Carry the personalisation through, so a forwarded link still greets
+  // the same person — whether it came from an id or an inline name.
   const u = new URL(baseUrl());
   const p = new URLSearchParams(location.search);
-  if (p.get('id')) u.searchParams.set('id', p.get('id'));
+  for (const k of ['id', 'n', 'nt', 'c']) {
+    if (p.get(k)) u.searchParams.set(k, p.get(k));
+  }
   u.searchParams.set('lang', state.lang);
   return u.toString();
 }

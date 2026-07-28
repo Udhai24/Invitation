@@ -434,6 +434,184 @@ section('18. Accessibility markup');
   s.close();
 }
 
+section('19. ?n= links: greeting works with no guests.json entry');
+{
+  const s = await run('?n=Ramesh%20Mama&c=Relative&lang=en');
+  eq(T(s.d.querySelector('#greetLine')), 'Welcome, Ramesh Mama', 'inline name used in the greeting');
+  eq(T(s.d.querySelector('#greetTag')), 'Family & Relatives', 'inline category drives the tag');
+  eq(s.d.querySelector('#greetTag').hidden, false, 'tag shown');
+  eq(s.consoleErrors.length, 0, 'no console errors');
+  s.close();
+}
+
+section('20. ?n= links: Tamil name via ?nt=');
+{
+  const s = await run('?n=Suresh%20Family&nt=%E0%AE%9A%E0%AF%81%E0%AE%B0%E0%AF%87%E0%AE%B7%E0%AF%8D%20%E0%AE%95%E0%AF%81%E0%AE%9F%E0%AF%81%E0%AE%AE%E0%AF%8D%E0%AE%AA%E0%AE%A4%E0%AF%8D%E0%AE%A4%E0%AE%BE%E0%AE%B0%E0%AF%8D&c=Family&lang=ta');
+  eq(T(s.d.querySelector('#greetLine')), 'இல்லம் வருக, சுரேஷ் குடும்பத்தார்', 'Tamil name used in Tamil mode');
+  eq(T(s.d.querySelector('#greetTag')), 'சொந்தம்', 'Tamil category tag');
+  s.close();
+
+  const en = await run('?n=Suresh%20Family&nt=%E0%AE%9A%E0%AF%81%E0%AE%B0%E0%AF%87%E0%AE%B7%E0%AF%8D&c=Family&lang=en');
+  eq(T(en.d.querySelector('#greetLine')), 'Welcome home, Suresh Family', 'Latin name used in English mode');
+  en.close();
+}
+
+section('21. ?n= links: single name used in both languages');
+{
+  const s = await run('?n=Arun&lang=ta');
+  eq(T(s.d.querySelector('#greetLine')), 'வணக்கம், Arun', 'falls back to the Latin name, no blank');
+  yes(s.d.querySelector('#greetTag').hidden, 'no category means no tag');
+  s.close();
+}
+
+section('22. ?n= links: untrusted input is neutralised');
+{
+  const s = await run('?n=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E&lang=en');
+  const line = s.d.querySelector('#greetLine');
+  eq(line.querySelectorAll('*').length, 0, 'no elements injected into the greeting');
+  no(s.d.querySelector('#greetLine img'), 'no <img> created');
+  no(/<img/i.test(s.d.body.innerHTML), 'no img tag anywhere in the document');
+  has(T(line), 'img src=x', 'angle brackets stripped, text kept harmless');
+  s.close();
+
+  const long = await run('?n=' + 'A'.repeat(300) + '&lang=en');
+  const shown = T(long.d.querySelector('#greetLine'));
+  yes(shown.length < 90, `overlong name capped (${shown.length} chars) so the layout holds`);
+  long.close();
+
+  const junkCat = await run('?n=Arun&c=%3Cscript%3E&lang=en');
+  eq(T(junkCat.d.querySelector('#greetLine')), 'Welcome, Arun', 'unknown category falls back to the default greeting');
+  yes(junkCat.d.querySelector('#greetTag').hidden, 'bogus category shows no tag');
+  junkCat.close();
+}
+
+section('23. ?id= precedence and fall-through');
+{
+  const s = await run('?id=A1001&n=Someone%20Else&lang=en');
+  eq(T(s.d.querySelector('#greetLine')), 'Welcome, Dr. Ramesh Kumar', 'curated id takes precedence over ?n=');
+  s.close();
+
+  const miss = await run('?id=NOPE&n=Ramesh%20Mama&c=Relative&lang=en');
+  eq(T(miss.d.querySelector('#greetLine')), 'Welcome, Ramesh Mama', 'unknown id falls through to the inline name');
+  miss.close();
+
+  const neither = await run('?lang=en');
+  eq(T(neither.d.querySelector('#greetLine')), 'Dear Guest, welcome', 'neither given → generic greeting');
+  neither.close();
+}
+
+section('24. Forwarding an inline-name link keeps the personalisation');
+{
+  const s = await run('?n=Ramesh%20Mama&nt=%E0%AE%B0%E0%AE%AE%E0%AF%87%E0%AE%B7%E0%AF%8D&c=Relative&lang=en');
+  const txt = decodeURIComponent(s.d.querySelector('#shareWa').href.split('text=')[1]);
+  has(txt, 'n=Ramesh+Mama', 'name carried into the share link');
+  has(txt, 'nt=', 'Tamil name carried too');
+  has(txt, 'c=Relative', 'category carried');
+  has(txt, 'lang=en', 'language carried');
+  s.close();
+}
+
+section('25. tools/create.html — the family-facing link creator');
+{
+  const p = path.join(ROOT, 'tools/create.html');
+  const src = fs.readFileSync(p, 'utf8');
+
+  // its sanitiser must match the app's
+  const appSrc = fs.readFileSync(path.join(ROOT, 'assets/js/app.js'), 'utf8');
+  const cls = /\[\\u0000-\\u001F\\u007F-\\u009F\\u200B-\\u200F\\u2028\\u2029\]/;
+  yes(cls.test(src), 'creator sanitises control + invisible characters');
+  yes(cls.test(appSrc), 'invitation sanitises the same set');
+
+  has(src, 'noindex', 'creator page is noindex');
+  has(src, "new URL('../', location.href)", 'derives the invitation URL from its own location');
+  no(/localhost:8080\/\?/.test(src), 'no hardcoded host in generated links');
+
+  const dom = new JSDOM(src, { url: 'https://example.test/invitation/tools/create.html',
+                               pretendToBeVisual: true, runScripts: 'dangerously' });
+  const w = dom.window, d = w.document;
+  await sleep(60);
+
+  eq(d.documentElement.lang, 'ta', 'opens in Tamil');
+  eq(d.querySelectorAll('#chips .chip').length, 7, 'seven category chips (incl. "not specified")');
+  yes(d.querySelector('#nm'), 'name field present');
+  eq(T(d.querySelector('#pvLine')), 'அன்புடையீர் வணக்கம்', 'preview shows the generic greeting while empty');
+  yes(d.querySelector('#waBtn').getAttribute('aria-disabled') === 'true', 'buttons disabled until a name is typed');
+
+  // type a name
+  d.querySelector('#nm').value = 'ரமேஷ் மாமா';
+  d.querySelector('#nm').oninput();
+  eq(T(d.querySelector('#pvLine')), 'வணக்கம், ரமேஷ் மாமா', 'preview updates live');
+  no(d.querySelector('#waBtn').getAttribute('aria-disabled'), 'buttons enabled');
+  const link = T(d.querySelector('#linkBox'));
+  has(link, 'example.test/invitation/', 'link points at the invitation, not the tool');
+  has(link, 'nt=', 'Tamil name goes into nt=');
+  has(link, 'lang=ta', 'language included');
+  no(link.includes('/tools/'), 'link does not point back into /tools/');
+
+  // pick a category
+  const chips = [...d.querySelectorAll('#chips .chip')];
+  const family = chips.find(c => T(c) === 'சொந்தம்');
+  family.onclick();
+  eq(T(d.querySelector('#pvLine')), 'இல்லம் வருக, ரமேஷ் மாமா', 'category changes the preview greeting');
+  eq(T(d.querySelector('#pvTag')), 'சொந்தம்', 'preview tag appears');
+  has(T(d.querySelector('#linkBox')), 'c=Family', 'category added to the link');
+
+  // switch the tool to English
+  d.querySelector('#langBtn').onclick();
+  eq(d.documentElement.lang, 'en', 'tool switches to English');
+  eq(T(d.querySelector('#langBtn')), 'தமிழ்', 'toggle offers Tamil back');
+  eq(d.querySelectorAll('#chips .chip').length, 7, 'chips rebuilt in English');
+  yes(T(d.querySelector('#h1')).includes('personal invitation'), 'headings translated');
+
+  // WhatsApp message
+  // language toggle should swap the two name fields, not mislabel them
+  eq(d.querySelector('#nm').value, '', 'English field is empty after the swap');
+  eq(d.querySelector('#nm2').value, 'ரமேஷ் மாமா', 'Tamil name moved to the Tamil field');
+
+  d.querySelector('#nm').value = 'Ramesh Mama';
+  d.querySelector('#nm').oninput();
+  // The preview deliberately shows the GUEST's view, which is still Tamil
+  // because the invitation-language selector is on Tamil.
+  eq(T(d.querySelector('#pvLine')), 'இல்லம் வருக, ரமேஷ் மாமா',
+     'preview keeps showing the guest view (Tamil), not the tool language');
+  d.querySelector('#lg').value = 'en';
+  d.querySelector('#lg').onchange();
+  eq(T(d.querySelector('#pvLine')), 'Welcome home, Ramesh Mama',
+     'switching the invitation language flips the preview');
+  eq(T(d.querySelector('#pvNames')), 'Yuvasri — Vignesh Kumar', 'couple names follow the guest language');
+  const enLink = T(d.querySelector('#linkBox'));
+  has(enLink, 'n=Ramesh+Mama', 'Latin name in n=');
+  has(enLink, 'nt=', 'Tamil name preserved in nt=');
+
+  const wa = d.querySelector('#waBtn').href;
+  has(wa, 'wa.me/?text=', 'WhatsApp link');
+  const msg = decodeURIComponent(wa.split('text=')[1]);
+  has(msg, '12 Sep 2026', 'reception date in the English message');
+  has(msg, '13 Sep 2026', 'muhurtham date in the English message');
+  has(msg, 'Reception', 'reception labelled');
+  has(msg, 'Muhurtham', 'muhurtham labelled');
+  has(msg, 'S.S.P', 'venue in the message');
+
+  // and the Tamil message carries the Tamil dates
+  d.querySelector('#langBtn').onclick();
+  const taMsg = decodeURIComponent(d.querySelector('#waBtn').href.split('text=')[1]);
+  has(taMsg, '12.09.2026', 'reception date in the Tamil message');
+  has(taMsg, 'சுபமுகூர்த்தம்', 'muhurtham named in Tamil');
+
+  w.close();
+}
+
+section('26. Round trip: a creator link works in the invitation');
+{
+  // Exactly what section G generated: Tamil name + category
+  const s = await run('?n=%E0%AE%B0%E0%AE%AE%E0%AF%87%E0%AE%B7%E0%AF%8D%20%E0%AE%AE%E0%AE%BE%E0%AE%AE%E0%AE%BE&nt=%E0%AE%B0%E0%AE%AE%E0%AF%87%E0%AE%B7%E0%AF%8D%20%E0%AE%AE%E0%AE%BE%E0%AE%AE%E0%AE%BE&c=Family&lang=ta');
+  eq(T(s.d.querySelector('#greetLine')), 'இல்லம் வருக, ரமேஷ் மாமா', 'round-trip: creator link greets correctly');
+  eq(T(s.d.querySelector('#greetTag')), 'சொந்தம்', 'round-trip: category tag correct');
+  yes(T(s.d.querySelector('#invBody')).length > 50, 'round-trip: full invitation renders');
+  eq(s.consoleErrors.length, 0, 'round-trip: no console errors');
+  s.close();
+}
+
 console.log(fails === 0
   ? `\n\x1b[1;32m${passes} checks passed, 0 failed.\x1b[0m\n`
   : `\n\x1b[1;31m${passes} passed, ${fails} FAILED.\x1b[0m\n`);

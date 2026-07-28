@@ -71,7 +71,9 @@ Open your Pages URL and confirm:
 | Language button (top right) | Switches, and the URL updates so it's shareable |
 | Countdown | Ticking down to 13 Sep 2026, 06:00 IST |
 | Schedule | Two cards — reception Sat 12th, muhurtham Sun 13th |
-| `…/invitation/tools/links.html` | Guest links + QR codes for everyone in `guests.json` |
+| `…/invitation/?n=Ramesh%20Mama&c=Relative` | "Welcome, Ramesh Mama" — works with no setup |
+| `…/invitation/tools/create.html` | The link creator your family will use |
+| `…/invitation/tools/links.html` | Curated links + QR codes for everyone in `guests.json` |
 
 Then open it on a real phone over mobile data — that's the environment most of your guests will be in.
 
@@ -97,6 +99,18 @@ node tools/test.mjs
 ```
 
 ---
+
+## Sharing the work with your family
+
+Once Pages is live, send your relatives this one link:
+
+```
+https://YOUR-USERNAME.github.io/invitation/tools/create.html
+```
+
+They can each make personal invitation links for their own side of the guest list — on their phone, in Tamil or English, no accounts, no app, nothing to install. Type a name, tap **WhatsApp**, done. Nothing they do can break the site, because the page only builds links; it never writes anything.
+
+Worth telling them: **the guest's name appears in the link they generate.** That's how it works without a database. Same information as the printed card, so it's fine — just not the place for anything private.
 
 ## Two notes before you send links to guests
 
