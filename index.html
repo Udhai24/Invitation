@@ -113,6 +113,17 @@
 <!-- ═══════════════════════════ HERO ═══════════════════════════ -->
 <section class="hero" id="hero">
 
+  <!-- Ambient background. Purely decorative, kept out of the a11y tree, and
+       switched off entirely under prefers-reduced-motion. -->
+  <div class="ambient" aria-hidden="true">
+    <span class="orb orb--1"></span>
+    <span class="orb orb--2"></span>
+    <span class="orb orb--3"></span>
+    <div class="petals">
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+  </div>
+
   <div class="hero__corner hero__corner--tl" data-i18n="hero.corner.left">மலர்ந்த முகமே !</div>
   <div class="hero__corner hero__corner--tr" data-i18n="hero.corner.right">வாழ்க்கையின் இன்பம் !!</div>
 
@@ -211,6 +222,9 @@
 
 <!-- ═══════════════════════════ COUNTDOWN ═══════════════════════════ -->
 <section class="sec sec--ink reveal" id="countdown">
+  <div class="ambient ambient--lamp" aria-hidden="true">
+    <span class="orb orb--lamp"></span>
+  </div>
   <div class="wrap">
     <p class="eyebrow eyebrow--light" data-i18n="cd.eyebrow">இன்னும்</p>
     <h2 class="h2 h2--light" data-i18n="cd.title">முகூர்த்தத்திற்கு</h2>
@@ -282,6 +296,12 @@
 
 <!-- ═══════════════════════════ FOOTER / SHARE ═══════════════════════════ -->
 <footer class="foot">
+  <div class="ambient ambient--foot" aria-hidden="true">
+    <span class="orb orb--lamp"></span>
+    <div class="petals petals--slow">
+      <i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+  </div>
   <div class="wrap">
     <svg class="rule rule--foot" viewBox="0 0 260 24" aria-hidden="true">
       <path d="M4 12h96"/><path d="M160 12h96"/>

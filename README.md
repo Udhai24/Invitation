@@ -122,6 +122,7 @@ Everything lives in **`assets/js/config.js`** — one file, heavily commented.
 |---|---|
 | Names, monogram, name order | `couple` |
 | Reception / muhurtham dates and times | `events` |
+| Reception running order (welcome, dinner) | `events[0].timeline` |
 | Add another ceremony | `events` — copy a block |
 | Venue, address, map link | `venues` |
 | Parents' names, family addresses, signatures | `families` |
@@ -170,7 +171,7 @@ assets/
   img/og.svg                link-preview image
 tools/create.html           family-facing link creator (?n= links, no setup)
 tools/links.html            curated ?id= links + QR + CSV, from guests.json
-tools/test.mjs              231 automated checks (see below)
+tools/test.mjs              263 automated checks (see below)
 docs/printed-card.jpg       the original printed card, for proofreading
 ```
 
@@ -196,6 +197,22 @@ docs/printed-card.jpg       the original printed card, for proofreading
 
 **The loader can't get stuck.** Three layers: a classic inline script arms a 5-second failsafe that dismisses it no matter what happens to the module; `boot()` catches any render error and dismisses it; and `file://` is detected up front and explained. A `<noscript>` rule hides it for anyone with JavaScript off.
 
+### Motion
+
+Ambient background motion in three places: drifting lamp-glow orbs plus falling
+jasmine petals in the hero, a slow pulsing glow behind the countdown, and a
+dimmer version of both in the footer. Sections and their contents stagger in as
+you scroll, the countdown digits lift each time they change, the gold lotus bud
+breathes, and the last step of the reception timeline pulses.
+
+All of it is decoration. Every ambient layer is `aria-hidden` and
+`pointer-events:none`; only `transform`, `opacity`, `filter`, `box-shadow` and
+`background-position` are animated, so nothing triggers layout. Petal count
+halves below 560px. Everything switches off under `prefers-reduced-motion` and
+under `prefers-reduced-data`, and the scroll-reveal falls back to showing all
+content when `IntersectionObserver` is unavailable — the page can never be left
+blank by the animation layer. Tests 27 and 28 enforce all of this.
+
 **Print:** `Ctrl/Cmd+P` gives a clean one-page card — nav, countdown and map are dropped.
 
 ### Running the tests
@@ -205,7 +222,7 @@ npm install jsdom      # one-off
 node tools/test.mjs
 ```
 
-231 checks covering: personalised greetings per category and language, the `?lang=` / saved-choice / guest-record / browser-locale precedence chain, unknown guest ids and an unreachable `guests.json`, no unreplaced `{placeholders}` in either language, both event cards and their IST→UTC calendar conversions, countdown maths against `2026-09-13T06:00+05:30`, that RSVP is gone from markup/CSS/JS, that no grandparents or elders leak through, inline ?n= links including name sanitising and ?id= precedence, the creator page end to end, the loader failsafe including the `file://` path, share links preserving the guest id, translation parity between `en` and `ta`, GitHub Pages path assumptions, and accessibility markup. Run it after editing `config.js` or `i18n.js`.
+263 checks covering: personalised greetings per category and language, the `?lang=` / saved-choice / guest-record / browser-locale precedence chain, unknown guest ids and an unreachable `guests.json`, no unreplaced `{placeholders}` in either language, both event cards and their IST→UTC calendar conversions, countdown maths against `2026-09-13T06:00+05:30`, that RSVP is gone from markup/CSS/JS, that no grandparents or elders leak through, inline ?n= links including name sanitising and ?id= precedence, the creator page end to end, the reception running order, and that every ambient animation is decorative, aria-hidden, layout-free and fully disabled under reduced motion, the loader failsafe including the `file://` path, share links preserving the guest id, translation parity between `en` and `ta`, GitHub Pages path assumptions, and accessibility markup. Run it after editing `config.js` or `i18n.js`.
 
 ---
 

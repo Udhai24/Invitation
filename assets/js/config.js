@@ -53,7 +53,14 @@ export const CONFIG = {
       start: '2026-09-12T18:00:00+05:30',
       end:   '2026-09-12T22:00:00+05:30',
       timeLabel: { en: '6:00 PM onwards',  ta: 'மாலை 6.00 மணிக்கு மேல்' },
-      extra:     { en: 'Dinner at 7:30 PM', ta: 'இரவு 7.30 மணிக்கு மணவிருந்து' },
+      extra:     null,
+      // An optional running order, shown as a small timeline inside the card.
+      timeline: [
+        { time: { en: '6:00 PM', ta: 'மாலை 6.00' },
+          what: { en: 'Welcoming the couple', ta: 'மணமக்கள் வரவேற்பு' } },
+        { time: { en: '7:30 PM', ta: 'இரவு 7.30' },
+          what: { en: 'Dinner is served',     ta: 'மணவிருந்து' } }
+      ],
       venueId: 'sspbhavana'
     },
     {
@@ -66,6 +73,7 @@ export const CONFIG = {
       timeLabel: { en: 'Between 6:00 and 7:30 in the morning',
                    ta: 'காலை 6.00 – 7.30 மணிக்குள்' },
       extra:     null,
+      timeline: null,
       venueId: 'sspbhavana'
     }
   ],

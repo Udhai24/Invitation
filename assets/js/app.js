@@ -239,6 +239,16 @@ function renderEvents(lang) {
     // The muhurtham carries the lagnam; the reception carries the dinner time.
     const sub = ev.extra ? ev.extra[lang]
               : (ev.primary ? CONFIG.panchangam.lagnam[lang] : '');
+
+    const timeline = ev.timeline?.length
+      ? `<ol class="tl">${ev.timeline.map(step => `
+           <li class="tl__step">
+             <span class="tl__dot" aria-hidden="true"></span>
+             <span class="tl__time">${step.time[lang]}</span>
+             <span class="tl__what">${step.what[lang]}</span>
+           </li>`).join('')}</ol>`
+      : '';
+
     return `
       <article class="ev${ev.primary ? ' ev--primary' : ''}">
         <h3 class="ev__name">${ev.name[lang]}</h3>
@@ -251,6 +261,7 @@ function renderEvents(lang) {
           <div class="ev__row"><dt class="ev__k">${t(lang, 'sch.where')}</dt>
             <dd class="ev__v">${v.name[lang]}<small>${v.address[lang].join(', ')}</small></dd></div>
         </dl>
+        ${timeline}
         ${cal}
       </article>`;
   }).join('');
@@ -265,6 +276,18 @@ function startCountdown(lang) {
   const cd = $('#cd'), msg = $('#cdMsg');
   const pad = n => String(n).padStart(2, '0');
 
+  /* Write a digit, and give it a tiny lift when the value actually changes.
+     Skipped entirely under prefers-reduced-motion. */
+  const put = (el, value) => {
+    const next = String(value);
+    if (el.textContent === next) return;
+    el.textContent = next;
+    if (REDUCED) return;
+    el.classList.remove('is-tick');
+    void el.offsetWidth;              // restart the animation
+    el.classList.add('is-tick');
+  };
+
   const tick = () => {
     const diff = target - Date.now();
     if (diff <= 0) {
@@ -276,10 +299,10 @@ function startCountdown(lang) {
     }
     cd.hidden = false; msg.hidden = true;
     const s = Math.floor(diff / 1000);
-    $('#cdD').textContent = Math.floor(s / 86400);
-    $('#cdH').textContent = pad(Math.floor(s / 3600) % 24);
-    $('#cdM').textContent = pad(Math.floor(s / 60) % 60);
-    $('#cdS').textContent = pad(s % 60);
+    put($('#cdD'), Math.floor(s / 86400));
+    put($('#cdH'), pad(Math.floor(s / 3600) % 24));
+    put($('#cdM'), pad(Math.floor(s / 60) % 60));
+    put($('#cdS'), pad(s % 60));
   };
 
   clearInterval(cdTimer);

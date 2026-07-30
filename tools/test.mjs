@@ -193,10 +193,18 @@ section('7. Two-day schedule: reception the evening before, then the muhurtham')
   has(T(rec), 'Saturday', 'reception falls on a Saturday');
   has(T(rec), '12 September 2026', 'reception is the day before the wedding');
   has(T(rec), '6:00 PM onwards', 'reception time');
-  has(T(rec), 'Dinner at 7:30 PM', 'dinner time carried over from the draft');
+  // the reception's running order renders as a timeline
+  const steps = [...rec.querySelectorAll('.tl__step')];
+  eq(steps.length, 2, 'reception shows a two-step running order');
+  has(T(steps[0]), '6:00 PM', 'first step: welcome time');
+  has(T(steps[0]), 'Welcoming the couple', 'first step: what happens');
+  has(T(steps[1]), '7:30 PM', 'second step: dinner time');
+  has(T(steps[1]), 'Dinner is served', 'second step: dinner');
+  eq(steps[1].querySelectorAll('.tl__dot').length, 1, 'each step has its marker dot');
   no(rec.classList.contains('ev--primary'), 'reception is not the primary event');
 
   eq(T(muh.querySelector('.ev__name')), 'Muhurtham', 'second card is the muhurtham');
+  eq(muh.querySelectorAll('.tl__step').length, 0, 'muhurtham has no timeline (none configured)');
   has(T(muh), 'Sunday', 'muhurtham falls on a Sunday');
   has(T(muh), '13 September 2026', 'muhurtham date');
   has(T(muh), 'Between 6:00 and 7:30 in the morning', 'muhurtham window');
@@ -213,7 +221,11 @@ section('7. Two-day schedule: reception the evening before, then the muhurtham')
   const ta = await run('?lang=ta');
   const tevs = [...ta.d.querySelectorAll('#events .ev')];
   eq(T(tevs[0].querySelector('.ev__name')), 'மணமக்கள் வரவேற்பு', 'Tamil reception title');
-  has(T(tevs[0]), 'இரவு 7.30 மணிக்கு மணவிருந்து', 'Tamil dinner line');
+  const tsteps = [...tevs[0].querySelectorAll('.tl__step')];
+  eq(tsteps.length, 2, 'Tamil reception timeline has both steps');
+  has(T(tsteps[0]), 'மணமக்கள் வரவேற்பு', 'Tamil welcome step');
+  has(T(tsteps[1]), 'இரவு 7.30', 'Tamil dinner time');
+  has(T(tsteps[1]), 'மணவிருந்து', 'Tamil dinner step');
   eq(T(tevs[1].querySelector('.ev__name')), 'சுபமுகூர்த்தம்', 'Tamil muhurtham title');
   ta.close();
 }
@@ -610,6 +622,106 @@ section('26. Round trip: a creator link works in the invitation');
   yes(T(s.d.querySelector('#invBody')).length > 50, 'round-trip: full invitation renders');
   eq(s.consoleErrors.length, 0, 'round-trip: no console errors');
   s.close();
+}
+
+
+section('27. Ambient motion is decorative and cannot hide content');
+{
+  const css = fs.readFileSync(path.join(ROOT, 'assets/css/main.css'), 'utf8');
+  const idx = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+
+  // every ambient layer must be hidden from assistive tech and non-interactive
+  const layers = [...idx.matchAll(/<div class="ambient[^"]*"([^>]*)>/g)].map(m => m[1]);
+  eq(layers.length, 3, 'three ambient layers (hero, countdown, footer)');
+  eq(layers.filter(a => a.includes('aria-hidden="true"')).length, 3, 'all are aria-hidden');
+  has(css, '.ambient{', 'ambient layer styled');
+  has(css, 'pointer-events:none', 'ambient never intercepts taps');
+
+  // Each ambient layer is absolutely positioned, so its host must establish a
+  // containing block and clip the overflow — otherwise petals escape the section.
+  for (const host of ['.hero{', '.sec{', '.foot{']) {
+    const rule = css.slice(css.indexOf(host), css.indexOf('}', css.indexOf(host)));
+    yes(/position:relative/.test(rule), `${host.slice(0, -1)} establishes a containing block`);
+    yes(/overflow:hidden/.test(rule), `${host.slice(0, -1)} clips its ambient layer`);
+  }
+  has(css, '.wrap{\n  position:relative; z-index:1;', 'content sits above the ambient layer');
+
+  // Only compositor-friendly properties may be animated. Parse @keyframes with
+  // real brace matching — a regex mis-reads the nested percentage blocks.
+  const frames = [];
+  for (let i = css.indexOf('@keyframes'); i !== -1; i = css.indexOf('@keyframes', i + 1)) {
+    const name = css.slice(i + 10, css.indexOf('{', i)).trim();
+    let depth = 0, j = css.indexOf('{', i), start = j;
+    for (; j < css.length; j++) {
+      if (css[j] === '{') depth++;
+      else if (css[j] === '}' && --depth === 0) break;
+    }
+    frames.push({ name, body: css.slice(start + 1, j) });
+  }
+  yes(frames.length >= 10, `${frames.length} keyframe animations defined`);
+
+  const LAYOUT = /(^|[;{\s])(width|height|top|left|right|bottom|margin|padding|font-size)\s*:/;
+  const offenders = frames.filter(f => LAYOUT.test(f.body));
+  eq(offenders.map(f => f.name).join(',') || 'none', 'none',
+     'no keyframe animates layout properties (transform/opacity/filter/shadow only)');
+
+  const animatedProps = new Set();
+  for (const f of frames) {
+    for (const m of f.body.matchAll(/(^|[;{\s])([a-z-]+)\s*:/g)) animatedProps.add(m[2]);
+  }
+  yes(animatedProps.size > 0, `animated properties: ${[...animatedProps].sort().join(', ')}`);
+
+  // the reduced-motion block must switch everything off
+  const rm = css.slice(css.indexOf('@media (prefers-reduced-motion:reduce){',
+                                   css.indexOf('One switch for all motion')));
+  has(rm, '.ambient{ display:none !important; }', 'reduced motion removes the ambient layer');
+  has(rm, 'opacity:1 !important', 'reduced motion forces revealed content visible');
+  has(rm, 'transition-delay:0s !important', 'reduced motion clears stagger delays');
+  has(css, 'prefers-reduced-data', 'also stands down on data-saver connections');
+
+  // small screens do less work
+  has(css, '.petals i:nth-child(n+7){ display:none; }', 'fewer petals on small screens');
+}
+
+section('28. Staggered reveal never leaves content permanently invisible');
+{
+  // The stagger hides children until .is-in lands. If the observer never fired,
+  // the page would be blank — so the fallback path must add .is-in immediately.
+  const src = fs.readFileSync(path.join(ROOT, 'assets/js/app.js'), 'utf8');
+  const fn = src.slice(src.indexOf('function wireScroll'), src.indexOf('/* ─── 15.'));
+  has(fn, "REDUCED || !('IntersectionObserver' in window)", 'guards for missing IntersectionObserver');
+  has(fn, "items.forEach(el => el.classList.add('is-in'))", 'falls back to showing everything');
+
+  // with no IntersectionObserver at all, every section must still be revealed
+  const dom = new JSDOM(html, { url: 'https://example.test/invitation/?lang=en',
+                                pretendToBeVisual: true, runScripts: 'dangerously' });
+  const w = dom.window;
+  w.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
+  delete w.IntersectionObserver;
+  w.fetch = async () => ({ ok: false, status: 404 });
+  Object.defineProperty(w.document, 'fonts', { value: { ready: Promise.resolve() }, configurable: true });
+  const timers = [];
+  for (const k of GLOBALS) {
+    if (k === 'setTimeout') { set(k, (f, ms) => { const h = nodeTimeout(f, ms); timers.push(h); return h; }); continue; }
+    if (k === 'setInterval') { set(k, (f, ms) => { const h = nodeInterval(f, ms); timers.push(h); return h; }); continue; }
+    const v = k === 'window' ? w : w[k];
+    set(k, typeof v === 'function' && v.bind ? v.bind(w) : v);
+  }
+  const tmp = `/tmp/app.rev.${Math.random().toString(36).slice(2)}.mjs`;
+  fs.writeFileSync(tmp, src
+    .replace("'./config.js'", JSON.stringify(path.join(ROOT, 'assets/js/config.js')))
+    .replace("'./i18n.js'", JSON.stringify(path.join(ROOT, 'assets/js/i18n.js'))));
+  await import('file://' + tmp);
+  await sleep(60);
+  fs.unlinkSync(tmp);
+
+  const reveals = [...w.document.querySelectorAll('.reveal')];
+  eq(reveals.length, 7, 'seven revealable sections');
+  eq(reveals.filter(r => r.classList.contains('is-in')).length, 7,
+     'all revealed when IntersectionObserver is unavailable');
+  timers.forEach(clearAny);
+  w.close();
+  for (const k of GLOBALS) set(k, saved[k]);
 }
 
 console.log(fails === 0
